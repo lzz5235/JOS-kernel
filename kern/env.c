@@ -189,6 +189,9 @@ env_setup_vm(struct Env *e)
 
 	// LAB 3: Your code here.
 
+	e->env_pgdir = (pde_t *)page2kva(p);
+	memmove(e->env_pgdir,kern_pgdir,PGSIZE);
+	p->pp_ref++;
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
@@ -276,6 +279,20 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   'va' and 'len' values that are not page-aligned.
 	//   You should round va down, and round (va + len) up.
 	//   (Watch out for corner-cases!)
+	struct PageInfo *p;
+	uint32_t offset = (uint32_t)ROUNDDOWN(va,PGSIZE);
+	uint32_t upper_bound = offset + len;
+	int r;
+	for(;offset<upper_bound;offset+=PGSIZE)
+	{
+		p = page_alloc(0);
+		if(p==NULL)
+			panic("region_alloc:out of memory");
+		r=page_insert(e->env_pgdir,p,(void*)offset,PTE_U | PTE_W);
+		if(r!=0)
+			panic("region-alloc:%e\n",r);
+	}
+	return;
 }
 
 //
