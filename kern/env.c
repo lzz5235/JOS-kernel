@@ -281,15 +281,16 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   (Watch out for corner-cases!)
 	
 	struct PageInfo *p;
-	uint32_t offset = (uint32_t)ROUNDDOWN(va,PGSIZE);//ROUNDUP为字节向上对其
-	uint32_t upper_bound = offset + len;
+	va = (void *)ROUNDDOWN((uintptr_t)va,PGSIZE);//ROUNDUP为字节向上对其
+	void *end;
+	end = va + ROUNDUP(len,PGSIZE);
 	int r;
-	for(;offset<upper_bound;offset+=PGSIZE)
+	for(;va<end;va+=PGSIZE)
 	{
 		p = page_alloc(0);
 		if(p==NULL)
 			panic("region_alloc:out of memory");
-		r=page_insert(e->env_pgdir,p,(void*)offset,PTE_U | PTE_W);
+		r=page_insert(e->env_pgdir,p,va,PTE_U | PTE_W);
 		if(r!=0)
 			panic("region-alloc:%e\n",r);
 	}
@@ -390,6 +391,15 @@ void
 env_create(uint8_t *binary, size_t size, enum EnvType type)
 {
 	// LAB 3: Your code here.
+	struct Env *e;
+	int r;
+	if((r=env_alloc(&e,0)<0))
+	{
+		panic("env_create:%e",r);
+	}
+	load_icode(e,binary,size);
+
+	e->env_type = type;
 }
 
 //
@@ -505,7 +515,19 @@ env_run(struct Env *e)
 	//	e->env_tf to sensible values.
 
 	// LAB 3: Your code here.
+	if(curenv !=e)
+	{
+		if(curenv &&curenv->env_status == ENV_RUNNING)
+		{
+			curenv->env_status =ENV_RUNNABLE;
+		}	
+		curenv = e;
+		curenv->env_status = ENV_RUNNING;
+		curenv->env_runs++;
 
-	panic("env_run not yet implemented");
+		lcr3(PADDR(curenv->env_pgdir));
+	}
+	env_pop_tf(&curenv->env_tf);
+	//panic("env_run not yet implemented");
 }
 
