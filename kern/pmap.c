@@ -154,8 +154,8 @@ mem_init(void)
 
 	// Permissions: kernel R, user R
 	kern_pgdir[PDX(UVPT)] = PADDR(kern_pgdir) | PTE_U | PTE_P;
-	cprintf("UVPT=%p\n",UVPT);
-	cprintf("PTSIZE=%p\n",PTSIZE);
+//	cprintf("UVPT=%p\n",UVPT);
+//	cprintf("PTSIZE=%p\n",PTSIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Allocate an array of npages 'struct PageInfo's and store it in 'pages'.
@@ -215,7 +215,7 @@ mem_init(void)
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
-	cprintf("bootstack = %p		%p		\n%p\n",bootstack,PADDR(bootstack),1<<28);
+//	cprintf("bootstack = %p		%p		\n%p\n",bootstack,PADDR(bootstack),1<<28);
 	
 	boot_map_region(kern_pgdir,KSTACKTOP-KSTKSIZE ,KSTKSIZE,PADDR(bootstack),PTE_W|PTE_P);
 	
@@ -227,7 +227,7 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	cprintf("%p\n%p\n",KERNBASE,-KERNBASE);
+//	cprintf("%p\n%p\n",KERNBASE,-KERNBASE);
 	boot_map_region(kern_pgdir,KERNBASE,-KERNBASE,0,PTE_W);
 	
 	// Check that the initial page directory has been set up correctly.
