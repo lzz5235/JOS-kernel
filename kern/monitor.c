@@ -11,6 +11,7 @@
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
 #include <kern/trap.h>
+#include <kern/env.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -26,6 +27,8 @@ static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
 	{ "backtrace", "Display the infomation about the stack",mon_backtrace},
+	{ "continue", "Continue execution from the current location",mon_continue},
+	{ "si","Single-step one instruction at a time",mon_si},
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -89,8 +92,53 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }  
 
+int 
+mon_continue(int argc,char **argv,struct Trapframe *tf)
+{
+	extern struct Env *curenv;
+	if(tf== NULL)
+	{
+		cprintf("cannot continue:tr==NULL\n");
+		return -1;
+	}
+	else if(tf->tf_trapno !=T_BRKPT && tf->tf_trapno !=T_DEBUG)
+	{
+		cprintf("cannot continue:wrong trap number\n");
+		return -1;
+	}
+	cprintf("continue execution from the location.........\n");
+	tf->tf_eflags &=~FL_TF;//TFH置零，程序继续执行
+	
+	env_run(curenv);
 
+	return 0;
+}
 
+int mon_si(int argc,char **argv,struct Trapframe *tf)
+{
+	extern struct Env *curenv;
+    if(tf== NULL)                                          
+	{
+		cprintf("cannot continue:tr==NULL\n");
+		return -1;
+	}
+	else if(tf->tf_trapno !=T_BRKPT && tf->tf_trapno !=T_DEBUG)
+	{	
+		cprintf("cannot continue:wrong trap number\n");
+		return -1;
+	}
+	cprintf("Single-step one instruction at a time......\n");
+
+	tf->tf_eflags |= FL_TF;
+
+	struct Eipdebuginfo info;
+	debuginfo_eip(tf->tf_eip,&info);
+	cprintf("Si information :\n tf_eip=%08x\n%s:%d:%.*s+%d\n",tf->tf_eip,info.eip_file,info.eip_line,
+			info.eip_fn_namelen,info.eip_fn_name,tf->tf_eip-info.eip_fn_addr);
+	
+	env_run(curenv);
+		
+}
 /***** Kernel monitor command interpreter *****/
 
 #define WHITESPACE "\t\r\n "
