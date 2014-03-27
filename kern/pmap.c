@@ -409,8 +409,8 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 		if((pp = page_alloc(ALLOC_ZERO)) ==0)
 			return NULL;
 		pp->pp_ref = 1;
-		pgtable = (pte_t*)KADDR(page2pa(pp));//将页的虚拟地址转化为物理地址
-		*pgdir_entry = PADDR(pgtable) | PTE_P |PTE_W |PTE_U;
+		pgtable = (pte_t*)KADDR(page2pa(pp));//将页的物理地址转化为虚拟地址
+		*pgdir_entry = PADDR(pgtable) | PTE_P |PTE_W |PTE_U;////将页的虚拟地址转化为物理地址
 
 	}
 
@@ -579,6 +579,25 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
 
+	pte_t *pte;
+	perm = perm | PTE_P;
+
+	uint32_t offset = (uint32_t)va;
+	uint32_t offset_limit = ROUNDUP((uint32_t)va + len,PGSIZE);
+	for(;offset < offset_limit;offset +=PGSIZE)
+	{
+		if(offset>=ULIM)
+		{
+			user_mem_check_addr = (uintptr_t)offset;
+			return -E_FAULT;
+		}
+		pte = pgdir_walk(env->env_pgdir,(void *)offset,0);//Now pte should not be NULL
+		if(pte == NULL || !(*pte &perm))
+		{
+			user_mem_check_addr =(uintptr_t)offset;
+			return -E_FAULT;
+		}
+	}
 	return 0;
 }
 
