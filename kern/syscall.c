@@ -20,13 +20,8 @@ sys_cputs(const char *s, size_t len)
 	// Check that the user has permission to read memory [s, s+len).
 	// Destroy the environment if not.
 
-	// LAB 3: Your code here.
-	/*int i=0;
-	for(;i<len;i+=4)
-	{
-		cons_putc((int *)s);
-		s+=4;
-	}*/	
+	// LAB 3: Your code here
+	user_mem_assert(curenv,(void *)s,len,PTE_U);
 	// Print the string supplied by the user.
 	cprintf("%.*s", len, s);
 }
