@@ -95,7 +95,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 int 
 mon_continue(int argc,char **argv,struct Trapframe *tf)
 {
-	extern struct Env *curenv;
+/*	extern struct Env *curenv;
 	if(tf== NULL)
 	{
 		cprintf("cannot continue:tr==NULL\n");
@@ -110,12 +110,14 @@ mon_continue(int argc,char **argv,struct Trapframe *tf)
 	tf->tf_eflags &=~FL_TF;//TFH置零，程序继续执行
 	
 	env_run(curenv);
-
+*/
 	return 0;
 }
 
-int mon_si(int argc,char **argv,struct Trapframe *tf)
+int 
+mon_si(int argc,char **argv,struct Trapframe *tf)
 {
+	/* 
 	extern struct Env *curenv;
     if(tf== NULL)                                          
 	{
@@ -137,6 +139,8 @@ int mon_si(int argc,char **argv,struct Trapframe *tf)
 			info.eip_fn_namelen,info.eip_fn_name,tf->tf_eip-info.eip_fn_addr);
 	
 	env_run(curenv);
+*/
+	return 0;
 		
 }
 /***** Kernel monitor command interpreter *****/

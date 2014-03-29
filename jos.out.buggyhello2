@@ -4,9 +4,14 @@ Could not open option rom 'sgabios.bin': No such file or directory
 Physical memory: 66556K available, base = 640K, extended = 65532K
 check_page_alloc() succeeded!
 check_page() succeeded!
-0xf0000000
-0x10000000
-kernel panic at kern/pmap.c:767: PADDR called with invalid kva 00000000
+check_kern_pgdir() succeeded!
+check_page_installed_pgdir() succeeded!
+[00000000] new env 00001000
+Incoming TRAP frame at 0xefffffbc
+Incoming TRAP frame at 0xefffffbc
+[00001000] user_mem_check assertion failure for va 00803010
+[00001000] free env 00001000
+Destroyed the only environment - nothing more to do!
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
 
