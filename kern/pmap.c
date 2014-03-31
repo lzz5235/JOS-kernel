@@ -283,6 +283,13 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
+	int kstacktop_i;
+	int i;
+	for(i = 0;i< NCPU;i++)
+	{
+		kstacktop_i = KSTACKTOP - i*(KSTKSIZE + KSTKGAP);
+		boot_map_region(kern_pgdir,kstacktop_i-KSTKSIZE,KSTKSIZE,PADDR(percpu_kstacks[i]),PTE_W|PTE_P);
+	}
 
 }
 
@@ -331,11 +338,12 @@ page_init(void)
 //	cprintf("npages_basemem:%d\n",npages_basemem);
 //  cprintf("PGNUM : %d\n",PGNUM(PADDR(boot_alloc(0) ) ) );
 //	cprintf("npages = %d\n",npages);
+	size_t i_MPENTRY_PADDR = MPENTRY_PADDR / PGSIZE;
 	page_free_list = NULL;
 	
 	for (i = 0; i < npages; i++) {
 		pages[i].pp_ref = 0;
-		if(0 == i || ( (IOPHYSMEM_begin <= i) && ( i < EXTPHYSEME_end ) ) )
+		if(0 == i || ( (IOPHYSMEM_begin <= i) && ( i < EXTPHYSEME_end ) ) || i == i_MPENTRY_PADDR)
 		{
 //			cprintf("IOHOLE = %p\n",&pages[i]);
 		}
@@ -474,7 +482,9 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 		if(!pte)
 			panic("boot_map_region:pgdir_walk failed");
 		if(*pte & PTE_P)
-			panic("boot_map_region:pte remap");
+		{
+			//panic("boot_map_region:pte remap");
+		}
 		*pte = pa | perm |PTE_P;
 		va +=PGSIZE;
 		pa +=PGSIZE;
@@ -602,6 +612,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// value will be preserved between calls to mmio_map_region
 	// (just like nextfree in boot_alloc).
 	static uintptr_t base = MMIOBASE;
+	cprintf("base = %x\n",base);
 
 	// Reserve size bytes of virtual memory starting at base and
 	// map physical pages [pa,pa+size) to virtual addresses
@@ -621,7 +632,14 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+	uintptr_t nextBase=base+ROUNDUP(size,PGSIZE);
+	uintptr_t i;
+	if(nextBase>=MMIOLIM)
+		panic("mmio_map_region :overflow");
+	boot_map_region(kern_pgdir,base,ROUNDUP(size,PGSIZE),pa,PTE_PCD |PTE_PWT|PTE_W);
+	i=base;
+	base = nextBase; 
+	return (void *)i;
 }
 
 static uintptr_t user_mem_check_addr;
