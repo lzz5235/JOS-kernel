@@ -70,6 +70,7 @@ TRAPHANDLER_NOEC(__idt_simd,T_SIMDERR)
 TRAPHANDLER_NOEC(__idt_syscall,T_SYSCALL)
 TRAPHANDLER(__idt_default,T_DEFAULT)
 
+
 TRAPHANDLER_NOEC(__idt_irq0,IRQ_OFFSET+ IRQ_TIMER)
 
 TRAPHANDLER_NOEC(__idt_irq1,IRQ_OFFSET+ IRQ_KBD)
@@ -86,6 +87,7 @@ TRAPHANDLER_NOEC(__idt_irq11,IRQ_OFFSET+ 11)
 TRAPHANDLER_NOEC(__idt_irq12,IRQ_OFFSET+ 12)
 TRAPHANDLER_NOEC(__idt_irq13,IRQ_OFFSET+ 13)
 TRAPHANDLER_NOEC(__idt_irq14,IRQ_OFFSET+ IRQ_IDE)
+TRAPHANDLER_NOEC(__idt_irq15,IRQ_OFFSET+ 15)
 TRAPHANDLER_NOEC(__idt_irq19,IRQ_OFFSET+ IRQ_ERROR)
 
 
@@ -97,9 +99,11 @@ _alltraps:
 	pushl %ds
 	pushl %es
 	pushal
+
 	movw  $GD_KD, %ax
 	movw  %ax,%ds
 	movw  %ax,%es
+
 	pushl %esp
 	call trap
 
