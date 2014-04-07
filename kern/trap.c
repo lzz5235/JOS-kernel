@@ -110,11 +110,12 @@ trap_init(void)
 	extern void __idt_irq12();
 	extern void __idt_irq13();
 	extern void __idt_irq14();
+//	extern void __idt_irq15();
 
 	int i = 0;
 	SETGATE(idt[0],0,GD_KT,__idt_default,0);
 	for(i=1;i<255;i++)
-	{
+	{ 
 		idt[i] = idt[0];
 	}
 
@@ -142,7 +143,7 @@ trap_init(void)
 
 
 
-	SETGATE(idt[IRQ_OFFSET],0,GD_KT,__idt_irq0,0);
+	SETGATE(idt[IRQ_OFFSET+0],0,GD_KT,__idt_irq0,0);
 	SETGATE(idt[IRQ_OFFSET+1],0,GD_KT,__idt_irq1,0);
 	SETGATE(idt[IRQ_OFFSET+2],0,GD_KT,__idt_irq2,0);
 	SETGATE(idt[IRQ_OFFSET+3],0,GD_KT,__idt_irq3,0);
@@ -157,7 +158,8 @@ trap_init(void)
 	SETGATE(idt[IRQ_OFFSET+12],0,GD_KT,__idt_irq12,0);
 	SETGATE(idt[IRQ_OFFSET+13],0,GD_KT,__idt_irq13,0);
 	SETGATE(idt[IRQ_OFFSET+14],0,GD_KT,__idt_irq14,0);
-
+//	SETGATE(idt[IRQ_OFFSET+15],0,GD_KT,__idt_irq15,0);
+	
 	// Per-CPU setup 
 	trap_init_percpu();
 }
@@ -191,8 +193,9 @@ trap_init_percpu(void)
 
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
-	int cur_cpu_i = thiscpu->cpu_id;
-	thiscpu->cpu_ts.ts_esp0 = KSTACKTOP;
+	uint8_t cur_cpu_i = thiscpu->cpu_id;
+	//cprintf("CPU_i=%d\n",cur_cpu_i);
+	thiscpu->cpu_ts.ts_esp0 = KSTACKTOP-cur_cpu_i *(KSTKSIZE + KSTKGAP);
 	thiscpu->cpu_ts.ts_ss0 = GD_KD;
 
 	// Initialize the TSS slot of the gdt.
@@ -203,6 +206,7 @@ trap_init_percpu(void)
 	// Load the TSS selector (like other segment selectors, the
 	// bottom three bits are special; we leave them 0)
 	ltr((GD_TSS0+(cur_cpu_i<<3)) & ~0x7);
+	//ltr(GD_TSS0+  (cur_cpu_i<<3 ) );
 
 	// Load the IDT
 	lidt(&idt_pd);
@@ -293,6 +297,10 @@ trap_dispatch(struct Trapframe *tf)
 			}
 			tf->tf_regs.reg_eax = r;
 			return;
+		case (IRQ_OFFSET+IRQ_TIMER):
+			lapic_eoi();
+//			sched_yield();
+			return;
 		default:
 			break;
 	}
@@ -333,6 +341,8 @@ trap(struct Trapframe *tf)
 		// Acquire the big kernel lock before doing any
 		// serious kernel work.
 		// LAB 4: Your code here.
+		lock_kernel();
+
 		assert(curenv);
 
 		// Garbage collect if current enviroment is a zombie
@@ -340,7 +350,7 @@ trap(struct Trapframe *tf)
 			env_free(curenv);
 			curenv = NULL;
 			sched_yield();
-		}
+		}  
 
 		// Copy trap frame (which is currently on the stack)
 		// into 'curenv->env_tf', so that running the environment
