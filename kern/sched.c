@@ -29,7 +29,48 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// LAB 4: Your code here.
+	int now_env , i;
+	if (curenv) 
+	{
+	// thiscpu -> cpu_env
+		now_env = (ENVX(curenv ->env_id) + 1) % NENV;
+	} else 
+	{
+		now_env = 0;
+	}
+	for (i = 0; i < NENV; i++, now_env = (now_env + 1) % NENV) 
+	{
+		if (envs[now_env ]. env_status == ENV_RUNNABLE)
+		{
+			cprintf ("I am CPU %d , I am in sched yield , I find ENV %d\n",thiscpu ->cpu_id , now_env );
+			env_run (& envs[now_env ]);
+		}
+	}
+	
+	if (curenv && curenv ->env_status == ENV_RUNNING)
+	{
+		env_run(curenv);
+	}
 
+/*	if(thiscpu->cpu_env !=NULL)
+	{
+		int cur_env_id = thiscpu->cpu_env->env_id;
+		cur_env_id = ENVX(cur_env_id);
+
+		for(i = (cur_env_id+1)%NENV;i !=cur_env_id; i= (i+1)%NENV)
+		{
+			if(envs[i].env_status ==ENV_RUNNABLE)
+			{
+				idle = &envs[i];
+				break;
+			}
+		}
+		if(i !=cur_env_id)
+			env_run(&envs[i]);
+		if(thiscpu->cpu_env->env_status == ENV_RUNNING)
+			env_run(thiscpu->cpu_env);
+	}
+*/
 	// sched_halt never returns
 	sched_halt();
 }
@@ -40,10 +81,27 @@ sched_yield(void)
 void
 sched_halt(void)
 {
-	int i;
+	int i=0;
 
 	// For debugging and testing purposes, if there are no runnable
 	// environments in the system, then drop into the kernel monitor.
+	//
+	//
+/*	for (i = 0; i < NENV; i++) 
+	{
+	        if ((envs[i].env_status == ENV_RUNNABLE ||
+	             envs[i].env_status == ENV_RUNNING)) 
+			{
+	            cprintf("CPU %d : %d env is ", thiscpu->cpu_id, i);
+				if (envs[i].env_status == ENV_RUNNABLE) 
+					cprintf("ENV_RUNNABLE\n");
+				else 
+					cprintf("ENV_RUNNING\n");
+				
+	        }
+	}
+*/
+//	cprintf("NENV = %d\n",NENV);
 	for (i = 0; i < NENV; i++) {
 		if ((envs[i].env_status == ENV_RUNNABLE ||
 		     envs[i].env_status == ENV_RUNNING))
