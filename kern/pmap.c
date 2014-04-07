@@ -283,12 +283,13 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
-	int kstacktop_i;
+	uint32_t kstacktop_i;
 	int i;
 	for(i = 0;i< NCPU;i++)
 	{
 		kstacktop_i = KSTACKTOP - i*(KSTKSIZE + KSTKGAP);
-		boot_map_region(kern_pgdir,kstacktop_i-KSTKSIZE,KSTKSIZE,PADDR(percpu_kstacks[i]),PTE_W|PTE_P);
+		boot_map_region(kern_pgdir,kstacktop_i-KSTKSIZE,KSTKSIZE,PADDR(&percpu_kstacks[i]),PTE_W);
+		//cprintf("%p\n",&percpu_kstacks[i]);
 	}
 
 }
@@ -345,10 +346,13 @@ page_init(void)
 		pages[i].pp_ref = 0;
 		if(0 == i || ( (IOPHYSMEM_begin <= i) && ( i < EXTPHYSEME_end ) ) || i == i_MPENTRY_PADDR)
 		{
+			pages[i].pp_ref = 1;
+			pages[i].pp_link = NULL;
 //			cprintf("IOHOLE = %p\n",&pages[i]);
 		}
 		else
 		{
+			pages[i].pp_ref = 0;
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];//等于链表实现
 			//cprintf("Normal = %p\n",page_free_list);
@@ -612,7 +616,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// value will be preserved between calls to mmio_map_region
 	// (just like nextfree in boot_alloc).
 	static uintptr_t base = MMIOBASE;
-	cprintf("base = %x\n",base);
+//	cprintf("base = %x\n",base);
 
 	// Reserve size bytes of virtual memory starting at base and
 	// map physical pages [pa,pa+size) to virtual addresses
@@ -632,6 +636,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
+/* 
 	uintptr_t nextBase=base+ROUNDUP(size,PGSIZE);
 	uintptr_t i;
 	if(nextBase>=MMIOLIM)
@@ -640,6 +645,14 @@ mmio_map_region(physaddr_t pa, size_t size)
 	i=base;
 	base = nextBase; 
 	return (void *)i;
+   	*/
+	void *ret =(void *)base;
+	size = ROUNDUP(size,PGSIZE);
+	if(base + size > MMIOLIM ||base +size <base)
+		panic("mmio_map_region : reservation overflow");
+	boot_map_region(kern_pgdir,base,size,pa,PTE_PCD|PTE_PWT|PTE_W);
+	base +=size;
+	return ret;
 }
 
 static uintptr_t user_mem_check_addr;
