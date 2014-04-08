@@ -193,8 +193,10 @@ env_setup_vm(struct Env *e)
 	// LAB 3: Your code here.
 
 	e->env_pgdir = (pde_t *)page2kva(p);
-	memmove(e->env_pgdir,kern_pgdir,PGSIZE);
 	p->pp_ref++ ;
+
+	memcpy(e->env_pgdir, kern_pgdir, PGSIZE);
+	memset(e->env_pgdir, 0, PDX(UTOP) * sizeof(pde_t));
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
@@ -259,12 +261,16 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 
 	// Enable interrupts while in user mode.
 	// LAB 4: Your code here.
+//	e->env_tf.tf_eflags |=FL_IF;
 
 	// Clear the page fault handler until user installs one.
 	e->env_pgfault_upcall = 0;
 
 	// Also clear the IPC receiving flag.
 	e->env_ipc_recving = 0;
+
+	// Add Env Priority
+	e->env_priority = PRIORITY_DEFAULT;
 
 	// commit the allocation
 	env_free_list = e->env_link;
@@ -388,6 +394,7 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE.
 	region_alloc(e,(void *)(USTACKTOP-PGSIZE),PGSIZE);
+	return ;
 
 	// LAB 3: Your code here.
 }
@@ -514,7 +521,7 @@ env_pop_tf(struct Trapframe *tf)
 	panic("iret failed");  /* mostly to placate the compiler */
 }
 
-//
+//:set nofo	
 // Context switch from curenv to env e.
 // Note: if this is the first call to env_run, curenv is NULL.
 //
@@ -541,19 +548,20 @@ env_run(struct Env *e)
 	//	e->env_tf to sensible values.
 
 	// LAB 3: Your code here.
-	if(curenv !=e)
+		
+	if(curenv && curenv->env_status == ENV_RUNNING)
 	{
-		if(curenv &&curenv->env_status == ENV_RUNNING)
-		{
 			curenv->env_status =ENV_RUNNABLE;
-		}	
-		curenv = e;
-		curenv->env_status = ENV_RUNNING;
-		curenv->env_runs++;
+	}	
+	curenv = e;
+	assert(curenv->env_status==ENV_RUNNABLE);
+	curenv->env_status = ENV_RUNNING;
+	curenv->env_runs++;
 
-		lcr3(PADDR(curenv->env_pgdir));
-	}
+	lcr3(PADDR(curenv->env_pgdir));
+
+	unlock_kernel();
 	env_pop_tf(&curenv->env_tf);
-	//panic("env_run not yet implemented");
+	panic("env_run not yet implemented");
 }
 

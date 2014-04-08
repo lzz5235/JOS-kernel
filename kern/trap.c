@@ -299,7 +299,7 @@ trap_dispatch(struct Trapframe *tf)
 			return;
 		case (IRQ_OFFSET+IRQ_TIMER):
 			lapic_eoi();
-//			sched_yield();
+			sched_yield();
 			return;
 		default:
 			break;
