@@ -425,6 +425,36 @@ page_fault_handler(struct Trapframe *tf)
 	//   (the 'tf' variable points at 'curenv->env_tf').
 
 	// LAB 4: Your code here.
+	if(curenv->env_pgfault_upcall != NULL)
+	{
+		struct UTrapframe *utframe;
+		if(tf->tf_esp >=UXSTACKTOP-PGSIZE && tf->tf_esp < UXSTACKTOP)
+		{
+			utframe = (struct UTrapframe *)((void *)tf->tf_esp -sizeof(struct UTrapframe)-4);
+			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe) +4,PTE_U |PTE_W);
+		}
+		else
+		{
+			utframe = (struct UTrapframe *)((void *)tf->tf_esp - sizeof(struct UTrapframe));
+			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe),PTE_U|PTE_W);
+		}
+
+		utframe->utf_esp = tf->tf_esp;;
+		utframe->utf_eflags = tf->tf_eflags;
+		utframe->utf_eip = tf->tf_eip;
+		utframe->utf_regs = tf->tf_regs;
+		utframe->utf_err = tf->tf_err;
+		utframe->utf_fault_va = fault_va;//访问出错涉及的指令
+
+		curenv->env_tf.tf_eip = (uint32_t)curenv->env_pgfault_upcall;
+		curenv->env_tf.tf_esp = (uint32_t)utframe;
+		env_run(curenv);
+	}
+	else
+	{
+		cprintf("user page fault, env_pgfault_upcall == NULL\n");
+	}
+	
 
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",

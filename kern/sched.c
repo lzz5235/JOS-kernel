@@ -58,8 +58,8 @@ void RR_Priority_sched(void)
 		{
 			select_env=now_env;
 			max_priority = envs[now_env].env_priority;
-			cprintf ("I am CPU %d , I am in sched yield , I find ENV %d,Priority 0x%x, i = %d\n",
-					thiscpu ->cpu_id , select_env,max_priority,i);
+//			cprintf ("I am CPU %d , I am in sched yield , I find ENV %d,Priority 0x%x, i = %d\n",
+//					thiscpu ->cpu_id , select_env,max_priority,i);
 		}
 	}
 	
@@ -103,28 +103,6 @@ sched_yield(void)
 	
 	RR_Priority_sched();
 
-/*	int i;
-
-	if(thiscpu->cpu_env !=NULL)
-	{
-		int cur_env_id = thiscpu->cpu_env->env_id;
-		cprintf("cur_env_id = %d \n",cur_env_id);
-		cur_env_id = ENVX(cur_env_id);
-
-		for(i = (cur_env_id+1)%NENV;i !=cur_env_id; i= (i+1)%NENV)
-		{
-			if(envs[i].env_status ==ENV_RUNNABLE)
-			{
-				idle = &envs[i];
-				break;
-			}
-		}
-		if(i !=cur_env_id)
-			env_run(&envs[i]);
-		if(thiscpu->cpu_env->env_status == ENV_RUNNING)
-			env_run(thiscpu->cpu_env);
-	}
-*/
 	// sched_halt never returns
 	sched_halt();
 }

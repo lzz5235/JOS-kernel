@@ -151,7 +151,13 @@ static int
 sys_env_set_pgfault_upcall(envid_t envid, void *func)
 {
 	// LAB 4: Your code here.
-	panic("sys_env_set_pgfault_upcall not implemented");
+	struct Env *env;
+	int r = envid2env(envid,&env,1);
+	if(r < 0)
+		return -E_BAD_ENV;
+	env->env_pgfault_upcall = func;
+	return 0;
+	//panic("sys_env_set_pgfault_upcall not implemented");
 }
 
 // Allocate a page of memory and map it at 'va' with permission
@@ -206,8 +212,8 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	//panic("sys_page_alloc not implemented");
 }
 
-// Map the page of memory at 'srcva' in srcenvid's address space
-// at 'dstva' in dstenvid's address space with permission 'perm'.
+// Map the page of memory at 'srcva' in srcenvid's(source envid) address space
+// at 'dstva' in dstenvid's(destinction envid) address space with permission 'perm'.
 // Perm has the same restrictions as in sys_page_alloc, except
 // that it also must not grant write access to a read-only
 // page.
@@ -251,8 +257,10 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	pte_t *pte;
 	struct PageInfo *pp;
 	pp = page_lookup(srcenv->env_pgdir,srcva,&pte);
+
 	if(pp==NULL ||((perm&PTE_W)!=0 && (*pte &PTE_W)==0))
 		return -E_INVAL;
+
 	if((r =page_insert(dstenv->env_pgdir,pp,dstva,perm))<0)
 		return -E_NO_MEM;
 
@@ -281,7 +289,9 @@ sys_page_unmap(envid_t envid, void *va)
 	int r;
 	if((r=envid2env(envid,&env,1))<0)
 		return -E_BAD_ENV;
+
 	page_remove(env->env_pgdir,va);
+
 	return 0;
 //	panic("sys_page_unmap not implemented");
 }
