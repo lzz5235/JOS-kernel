@@ -26,14 +26,15 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 {
 	int r;
 
-	if (_pgfault_handler == 0) {
+	if (_pgfault_handler == 0) 
+	{
 		// First time through!
 		// LAB 4: Your code here.
-		if((r = sys_page_alloc(0,(void *)(UXSTACKTOP-PGSIZE),PTE_U|PTE_W|PTE_P))<0)
+		if((r = sys_page_alloc(0,(void *)(UXSTACKTOP-PGSIZE),PTE_U|PTE_W|PTE_P))<0)//alloc User Exception Stack 
 		{
 			panic("set_pgfault_handler: %e\n",r);
 		}
-		if((r = sys_env_set_pgfault_upcall(0,_pgfault_handler))<0)
+		if((r = sys_env_set_pgfault_upcall(0,_pgfault_upcall))<0)   //真正的要调用其实是用汇编写成的pagefault（）
 		{
 			panic("sys_env_set_pgfault_upcall error : %e\n", r);
 		}
@@ -42,4 +43,5 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 	}
 	// Save handler pointer for assembly to call.
 	_pgfault_handler = handler;
+	//这块代码在 lib/pfentry.S 中
 }

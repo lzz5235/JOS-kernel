@@ -64,7 +64,8 @@ i386_init(void)
 //	ENV_CREATE(user_breakpoint, ENV_TYPE_USER);
 //	ENV_CREATE(user_hello,ENV_TYPE_USER);
 //	ENV_CREATE(user_yield,ENV_TYPE_USER);
-	ENV_CREATE(user_dumbfork,ENV_TYPE_USER);
+//	ENV_CREATE(user_dumbfork,ENV_TYPE_USER);
+    ENV_CREATE(user_faultdie,ENV_TYPE_USER);
 //	ENV_CREATE(user_testpriority_high,ENV_TYPE_USER);
 //	ENV_CREATE(user_testpriority_default,ENV_TYPE_USER);
 //	ENV_CREATE(user_testpriority_middle,ENV_TYPE_USER);

@@ -435,11 +435,11 @@ page_fault_handler(struct Trapframe *tf)
 		}
 		else
 		{
-			utframe = (struct UTrapframe *)((void *)tf->tf_esp - sizeof(struct UTrapframe));
+			utframe = (struct UTrapframe *)(UXSTACKTOP - sizeof(struct UTrapframe));
 			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe),PTE_U|PTE_W);
 		}
 
-		utframe->utf_esp = tf->tf_esp;;
+		utframe->utf_esp = tf->tf_esp;
 		utframe->utf_eflags = tf->tf_eflags;
 		utframe->utf_eip = tf->tf_eip;
 		utframe->utf_regs = tf->tf_regs;
