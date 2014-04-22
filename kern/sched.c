@@ -99,9 +99,9 @@ sched_yield(void)
 
 	// LAB 4: Your code here.
 
-//	RR_sched();
+	RR_sched();
 	
-	RR_Priority_sched();
+//	RR_Priority_sched();
 
 	// sched_halt never returns
 	sched_halt();

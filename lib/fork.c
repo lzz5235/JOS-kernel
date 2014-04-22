@@ -140,7 +140,7 @@ fork(void)
 	{
 		if((uvpd[PDX(addr)] & PTE_P) && (uvpt[addr/PGSIZE] & PTE_P) && (uvpt[addr/PGSIZE] & PTE_U))
 		{
-			cprintf("uvpd[PDX(addr)]= %x\n",uvpd[PDX(addr)]);
+//			cprintf("uvpd[PDX(addr)]= %x\n",uvpd[PDX(addr)]);
 			duppage(childpid,addr/PGSIZE);
 		}
 	}

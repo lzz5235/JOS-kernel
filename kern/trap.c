@@ -110,7 +110,7 @@ trap_init(void)
 	extern void __idt_irq12();
 	extern void __idt_irq13();
 	extern void __idt_irq14();
-//	extern void __idt_irq15();
+	extern void __idt_irq15();
 
 	int i = 0;
 	SETGATE(idt[0],0,GD_KT,__idt_default,0);
@@ -158,7 +158,7 @@ trap_init(void)
 	SETGATE(idt[IRQ_OFFSET+12],0,GD_KT,__idt_irq12,0);
 	SETGATE(idt[IRQ_OFFSET+13],0,GD_KT,__idt_irq13,0);
 	SETGATE(idt[IRQ_OFFSET+14],0,GD_KT,__idt_irq14,0);
-//	SETGATE(idt[IRQ_OFFSET+15],0,GD_KT,__idt_irq15,0);
+	SETGATE(idt[IRQ_OFFSET+15],0,GD_KT,__idt_irq15,0);
 	
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -290,12 +290,12 @@ trap_dispatch(struct Trapframe *tf)
 		case T_SYSCALL:
 			r = syscall(tf->tf_regs.reg_eax,tf->tf_regs.reg_edx,tf->tf_regs.reg_ecx,tf->tf_regs.reg_ebx,
 					tf->tf_regs.reg_edi,tf->tf_regs.reg_esi);
-			if(r < 0)
+/*			if(r < 0)
 			{
 				panic("kern/trap.c/trap_dispatch:%e\n",r);
 
 			}
-			tf->tf_regs.reg_eax = r;
+*/			tf->tf_regs.reg_eax = r;
 			return;
 		case (IRQ_OFFSET+IRQ_TIMER):
 			lapic_eoi();
@@ -334,7 +334,8 @@ trap(struct Trapframe *tf)
 	// Check that interrupts are disabled.  If this assertion
 	// fails, DO NOT be tempted to fix it by inserting a "cli" in
 	// the interrupt path.
-	assert(!(read_eflags() & FL_IF));
+	
+	//assert(!(read_eflags() & FL_IF));
 
 	if ((tf->tf_cs & 3) == 3) {
 		// Trapped from user mode.
