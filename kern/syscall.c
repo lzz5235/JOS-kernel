@@ -22,7 +22,7 @@ sys_cputs(const char *s, size_t len)
 	// Destroy the environment if not.
 
 	// LAB 3: Your code here
-	user_mem_assert(curenv,(void *)s,len,PTE_U);
+//	user_mem_assert(curenv,(void *)s,len,PTE_U);
 	// Print the string supplied by the user.
 	cprintf("%.*s", len, s);
 }
@@ -142,7 +142,7 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 	int r = envid2env(envid,&env,1);
 	if(r < 0)
 		return -E_BAD_ENV;
-	user_mem_assert(env,tf,sizeof(struct Trapframe),PTE_U);
+//	user_mem_assert(env,tf,sizeof(struct Trapframe),PTE_U);
 
 	env->env_tf = *tf;
 	env->env_tf.tf_cs |=3;

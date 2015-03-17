@@ -434,12 +434,12 @@ page_fault_handler(struct Trapframe *tf)
 		if(tf->tf_esp >=UXSTACKTOP-PGSIZE && tf->tf_esp < UXSTACKTOP)
 		{
 			utframe = (struct UTrapframe *)((void *)tf->tf_esp -sizeof(struct UTrapframe)-4);
-			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe) +4,PTE_U |PTE_W);
+//			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe) +4,PTE_U |PTE_W);
 		}
 		else
 		{
 			utframe = (struct UTrapframe *)(UXSTACKTOP - sizeof(struct UTrapframe));
-			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe),PTE_U|PTE_W);
+//			user_mem_assert(curenv,(void *)utframe,sizeof(struct UTrapframe),PTE_U|PTE_W);
 		}
 
 		utframe->utf_esp = tf->tf_esp;
